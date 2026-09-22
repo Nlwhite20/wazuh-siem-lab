@@ -1,0 +1,15 @@
+# Real secrets and generated certificates never leave the VM
+.env
+*.env
+!*.env.example
+docker-compose.yml
+config/wazuh_indexer_ssl_certs/
+config/wazuh_dashboard/wazuh.yml
+!config-templates/**
+
+# Backup copies made during password changes (contain old defaults, but keep out of Git anyway)
+*.orig
+*.pre-pw
+
+# OS junk
+.DS_Store
