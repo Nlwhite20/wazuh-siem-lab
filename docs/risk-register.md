@@ -11,3 +11,4 @@ Status as of 2026-10-06. Lab-scale risks; likelihood and impact are judged for a
 | R-05 | Agent `soc-endpoint-01` Disconnected since 2026-09-28, so the endpoint is not monitored | High | Medium | Open | Start the endpoint VM, confirm reconnection, then run test events |
 | R-06 | 8 pending OS updates on `wazuh-siem` | Medium | Medium | Open | Patch in a planned window, then re-verify bindings and agent status |
 | R-07 | `securityadmin.sh` run with hostname verification disabled (`-nhnv`) | Low | Low | Accepted | Internal admin command only; see [security decisions](security-decisions.md) |
+| R-08 | Wazuh agent 002 event queue overflowed after the Lab 3 scan ("Events may be lost", 2026-10-06 14:32:01 to 14:32:25); the agent forwards every `eve.json` event type | Occurred | Medium | Open | Forward only needed event types or tune the queue, then re-check under load (Investigation 001) |

@@ -1,19 +1,20 @@
 # Investigation 001: Suricata IDS alerts from Lab 3 testing
 
-> Status: reviewed and approved by the analyst, 2026-10-06. Written from evidence already
-> captured that day; no new scans, tests or configuration changes were made for this report.
+> Status: approved 2026-10-06; evidence review update (2026-10-06, 14:50 UTC) reviewed and
+> approved by the analyst. All evidence comes from records that already existed. No new scans, tests or
+> configuration changes were made for this report.
 
 | Field | Value |
 | --- | --- |
 | Case | INV-001 |
-| Alert window | 2026-10-06, about 14:28 to 14:31 UTC |
+| Alert window | 2026-10-06, 14:28:29 to 14:31:01 UTC (review window 14:25 to 14:35) |
 | Analyst | Nick (lab owner), with Claude as assistant |
 | Source of alerts | Suricata 8.0.3 on `soc-endpoint-01`, forwarded by Wazuh agent 002 to the `wazuh-siem` manager |
-| Alerts in scope | 6: one known-alert test, five scan-related |
-| **Disposition** | **True positive, authorized test activity. No compromise indicated. Closed with follow-ups; related risks stay open** |
+| Alerts in scope | **7 Suricata alerts:** 2 from the known-alert test, 5 from the scan. The first version counted 6; the evidence review found a seventh (see Alert 1a) |
+| **Disposition** | **True positive, authorized test activity. No compromise indicated in the records reviewed. Closed with follow-ups; related risks stay open** |
 
-Build history, configuration and the full scan results are in the Lab 3 repo and are not
-repeated here: [build log](https://github.com/Nlwhite20/network-security-lab/blob/main/docs/build-log.md),
+Build history, configuration and full scan results are in the Lab 3 repo and are not repeated
+here: [build log](https://github.com/Nlwhite20/network-security-lab/blob/main/docs/build-log.md),
 [scan and exposure audit](https://github.com/Nlwhite20/network-security-lab/blob/main/docs/scan-and-exposure-audit.md).
 
 ## Purpose
@@ -28,71 +29,94 @@ what the evidence does and does not show.
   Lab 3 [CLAUDE.md](https://github.com/Nlwhite20/network-security-lab/blob/main/CLAUDE.md)
   before the tests ran.
 - Known-alert test: the Mac served one text file containing `uid=0(root)` on its UTM network
-  address only (temporary server, port 8080); the sensor fetched it once. This replaced the
-  public test site `testmynids.org`, which did not resolve; the replacement was approved
-  before it ran.
-  The server was confirmed stopped at 14:45:40 UTC (its recorded process no longer existed
-  and nothing was listening on port 8080). Its folder on the Mac has not been deleted.
+  address only (temporary server, port 8080); the sensor fetched it once with `curl`. This
+  replaced the public test site `testmynids.org`, which did not resolve; the replacement was
+  approved before it ran. The server was confirmed stopped at 14:45:40 UTC (its recorded
+  process no longer existed and nothing was listening on port 8080). Its folder on the Mac
+  has not been deleted.
 - Scan: from `ubuntu-mgmt`, `nmap -sT -p- -T3 --reason` against `soc-endpoint-01` and
   `wazuh-siem` only, each confirmed by hostname immediately before scanning.
 
 ## Affected systems
 
-| System | Role in these alerts |
-| --- | --- |
-| `soc-endpoint-01` | Sensor and the destination of all six alerts (Suricata `HOME_NET` is this host only) |
-| Mac host (UTM gateway address) | Source of the known-alert test response |
-| `ubuntu-mgmt` | Source of the scan traffic |
-| `wazuh-siem` | Received and stored the alerts. Also scanned, but that traffic was not visible to the sensor, so it produced none of these alerts |
+Labels replace real addresses throughout.
 
-## Alert 1: known-alert test
-
-| Field | Suricata `eve.json` (sensor) | Wazuh `alerts.json` (manager) |
+| Label | System | Role in these alerts |
 | --- | --- | --- |
-| Timestamp (UTC) | 2026-10-06 14:28:29.550573 | 2026-10-06 14:28:29.595 |
-| Signature | GPL ATTACK_RESPONSE id check returned root | (in description) |
-| Signature ID | 2100498 (matched as `"signature_id":2100498`) | 2100498 (matched as `signature_id`) |
-| Wazuh rule | — | **86601**, "Suricata: Alert - GPL ATTACK_RESPONSE id check returned root" |
-| Agent | — | 002 (`soc-endpoint-01`) |
-| `flow_id` | **1478072356148979** | **1478072356148979** |
-| Source | Mac host (UTM gateway) | not extracted |
-| Rule level | — | **not captured** |
+| SENSOR | `soc-endpoint-01` | Sensor; one end of every alert (Suricata `HOME_NET` is this host only) |
+| MAC-GW | Mac host (UTM gateway address) | Served the known-alert test file |
+| SCANNER | `ubuntu-mgmt` | Source of the scan traffic |
+| SIEM | `wazuh-siem` | Received and stored the alerts. Also scanned, but that traffic was not visible to the sensor |
 
-**Correlation:** the same `flow_id` and signature ID appear in both records, so the Wazuh alert
-is this specific Suricata event, not a similar one. The fetch was sent at 14:28:29 by the
-sensor's clock, which had been checked against the Mac within 1 second earlier that day.
+No other address appeared in any Suricata or Wazuh record in the review window.
 
-The two timestamps are about 45 ms apart. They are recorded by different processes (the
-packet time in Suricata, alert creation on the manager) on two separately synchronized
-clocks, so this is **not** a measured ingestion latency; it only shows both records belong
-to the same moment.
+## Evidence reviewed and method
 
-The `eve.json` record shows the Mac host as the alert's source address and the sensor as the
-flow's other source address. This is consistent with Suricata alerting on the server's
-response inside a connection the sensor opened, which matches the test design. Only those
-fields were extracted; the full record was not kept in this repo.
-
-## Alerts 2 to 6: scan-related
-
-Counted on the sensor (`eve.json` alerts with the scanner as source) and on the manager
-(Wazuh alerts with the scanner as source), immediately after the scan:
-
-| Suricata signature (ET Open) | `eve.json` | Wazuh rule 86601 |
+| Source | Location | Coverage |
 | --- | --- | --- |
-| ET SCAN Potential VNC Scan 5800-5820 | 1 | 1 |
-| ET SCAN Suspicious inbound to MSSQL port 1433 | 1 | 1 |
-| ET SCAN Suspicious inbound to mySQL port 3306 | 1 | 1 |
-| ET SCAN Suspicious inbound to Oracle SQL port 1521 | 1 | 1 |
-| ET SCAN Suspicious inbound to PostgreSQL port 5432 | 1 | 1 |
+| Suricata `eve.json` | Sensor, `/var/log/suricata/` | One file, no rotated copies; covers the whole window (Suricata started 14:17) |
+| Wazuh alerts | Manager, `alerts.json` and `2026/Oct/ossec-alerts-06.json` | Same file under two names (hard link, identical size); records de-duplicated by alert ID |
 
-**Correlation:** by signature name, count (1:1 for each) and source host. **Not available:**
-signature IDs, `flow_id`s and per-alert timestamps for these five were not extracted, so they
-are not correlated record-to-record the way Alert 1 is.
+Each Suricata alert was matched to a Wazuh alert on **all** of: `flow_id`, signature ID,
+direction (source and destination), and the Suricata event timestamp, which Wazuh carries in
+the alert's data to the microsecond. Every `flow_id` + signature pair occurs exactly once on
+each side (7 and 7), so the matches are one-to-one, not inferred from names or counts.
+Raw records were saved on the two VMs, outside Git, readable only by the analyst.
 
-**Timing:** the scanner's clock was about 3 h 10 min slow during this scan, so its own times
-(11:20:15 to 11:20:18) are not usable. The whole command, including the scan and both alert
-queries, ran between 14:30:33 and 14:31:10 UTC by the Mac's clock, so these five alerts fall
-in that window. That bracket is the only timing claim made here.
+## Correlated alerts
+
+All Wazuh alerts below are rule **86601** ("Suricata: Alert - …"), **level 3**, agent **002
+(`soc-endpoint-01`)**.
+
+| # | Suricata time (UTC) | `flow_id` | SID:rev | Signature | Direction | Wazuh alert time (UTC) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1a | 14:28:29.550353 | 1478072356148979 | 2034567:1 | ET HUNTING curl User-Agent to Dotted Quad | SENSOR:32930 → MAC-GW:8080 | 14:28:29.591 |
+| 1b | 14:28:29.550573 | 1478072356148979 | 2100498:7 | GPL ATTACK_RESPONSE id check returned root | MAC-GW:8080 → SENSOR:32930 | 14:28:29.595 |
+| 2 | 14:30:59.826387 | 1016031807015411 | 2010937:3 | ET SCAN Suspicious inbound to mySQL port 3306 | SCANNER → SENSOR:3306 | 14:31:01.608 |
+| 3 | 14:31:00.008282 | 1161472072704205 | 2002910:6 | ET SCAN Potential VNC Scan 5800-5820 | SCANNER → SENSOR:5800 | 14:31:01.608 |
+| 4 | 14:31:00.294734 | 1265876078744125 | 2010936:3 | ET SCAN Suspicious inbound to Oracle SQL port 1521 | SCANNER → SENSOR:1521 | 14:31:01.610 |
+| 5 | 14:31:00.397355 | 1143678849309419 | 2010935:3 | ET SCAN Suspicious inbound to MSSQL port 1433 | SCANNER → SENSOR:1433 | 14:31:01.614 |
+| 6 | 14:31:00.453756 | 1385918529752132 | 2010939:3 | ET SCAN Suspicious inbound to PostgreSQL port 5432 | SCANNER → SENSOR:5432 | 14:31:01.615 |
+
+**1a and 1b are one connection:** the sensor's `curl` request to the Mac's address (1a,
+flagged because `curl` contacted a bare IP address) and the Mac's response containing
+`uid=0(root)` (1b). Same `flow_id`, opposite directions, 0.2 ms apart. 1a was missed in the
+first version because one query filtered on signature 2100498 and the other on
+scanner-sourced alerts.
+
+## Timestamp basis and clock uncertainty
+
+- **Suricata times** come from the sensor's clock. It was corrected at 14:02, matched the Mac
+  at 14:13, and matched again at 14:50:41 (sensor and Mac both 14:50:41).
+- **Wazuh alert times** come from the manager's clock. It matched the Mac at 14:02:59 and at
+  14:51:47 (SIEM 14:51:47, Mac 14:51:42 before and 14:51:47 after).
+- Both clocks agreed with the Mac to within about a second before and after the window, but
+  were not measured during it.
+- The scanner's own clock was about 3 h 10 min slow during the scan and is not used. The
+  sensor's scan alert times (14:30:59.8 to 14:31:00.5) fall inside the Mac-clock window of the
+  scan command (14:30:33 to 14:31:10), which is consistent.
+- Wazuh alert times are 0.04 s (test) to about 1.8 s (scan) after the Suricata times. These
+  come from different processes on separately synchronized clocks, so they are **not** a
+  measured ingestion latency.
+
+## Surrounding activity: all agent 002 alerts, 14:25 to 14:35 UTC
+
+65 Wazuh alerts from agent 002 in the window:
+
+| Type | Rule (level) | Count | Assessment |
+| --- | --- | --- | --- |
+| Suricata alerts | 86601 (3) | 7 | The alerts above |
+| SSH logins and PAM sessions (SSH and sudo) | 5715, 5501, 5502 (3) | 19 (5 + 7 + 7) | Five logins (14:25:49, 14:27:11, 14:28:29, 14:30:39, 14:31:07), each at the time the analyst's commands connected to the sensor. **Login source addresses were not extracted** |
+| sudo | 5402 (3) | 2 | 14:25:55 and 14:26:01; the commands are the analyst's own read-only `grep` checks |
+| AppArmor DENIED | 52002 (3) | 24 | Six at each of four logins. **Cause not investigated** |
+| **Agent event queue** | **202 (7), 203 (9), 205 (3)** | **13** | **14:32:01 to 14:32:25: queue 90% full, then full ("Events may be lost") eleven times, then back to normal** |
+
+**Queue overflow:** the overflow started about one minute after the scan. The agent forwards
+every `eve.json` event type, not only alerts, and the file had grown to about 42 MB by 14:50.
+A likely cause is the burst of flow records from the 65,535-port scan, but this was not
+confirmed. All seven Suricata alerts reached the manager before the overflow began.
+**Events from about 14:32:01 to 14:32:25 may have been lost, and any lost events cannot be
+listed.**
 
 ## Scan reachability, from ubuntu-mgmt's viewpoint
 
@@ -106,44 +130,44 @@ is reachable from other networks, and it does not establish that the lab is isol
 
 ## Why this is authorized test activity, not a compromise
 
-1. **Sources are lab-owned and known:** the Mac host and `ubuntu-mgmt` are operated by the
-   analyst. No other source address appears in these six alerts (only scanner-sourced alerts
-   were counted for Alerts 2 to 6).
-2. **Timing matches the test runs** recorded in the Lab 3 build log (14:28 test; 14:30 to
-   14:31 scan window).
-3. **Content matches the test design:** Alert 1 fired on a file created for the test. The
-   five scan alerts are the port-specific signatures expected when every TCP port is probed.
-4. **Scope and approvals were written down before the activity,** including the approved
-   changes (in-lab test replacing the public site; `-Pn` for `wazuh-siem`).
-5. **No follow-on activity was seen in the data reviewed:** the sensor's only open port is SSH,
-   and Alert 1's `uid=0(root)` text came from a static file, not from a command run on the
-   sensor.
+1. **Known sources only:** every alert is between SENSOR and either MAC-GW or SCANNER, both
+   operated by the analyst. No other address appears in the Suricata or Wazuh records reviewed.
+2. **Timing matches the recorded test runs:** the 14:28 test and the 14:30 to 14:31 scan in
+   the Lab 3 build log.
+3. **Content matches the test design:** 1a and 1b are the two directions of the test fetch;
+   2 to 6 are port-specific signatures fired by a scan that probed every TCP port.
+4. **Scope and approvals were written down before the activity,** including the two approved
+   changes.
+5. **Surrounding host activity matches the analyst's own actions:** logins at the times the
+   analyst connected, and two sudo commands that are the analyst's own checks.
 
-Point 5 is limited to what was reviewed (see below).
+This conclusion covers only the records reviewed: agent 002's Wazuh alerts and the sensor's
+`eve.json` for 14:25 to 14:35 UTC.
 
 ## What remains uncertain
 
-- Signature IDs, `flow_id`s and exact timestamps for Alerts 2 to 6 were not extracted.
-- Wazuh rule levels for all six alerts were not recorded.
-- No other alerts from the same window, from other sources or agents, were reviewed. This
-  report does not show the window was otherwise quiet.
-- Suricata sees only the sensor's own traffic (no port mirroring in UTM), so activity between
-  other VMs would not appear.
-- The default ET Open rules raised five port-specific alerts for a full 65,535-port scan, and
-  no generic port-scan alert. This report does not claim port-scan detection.
-- The scanner's clock was wrong during the scan; this was caught after the fact.
+- Possible event loss during the queue overflow (14:32:01 to 14:32:25), after the alerts in
+  scope.
+- SSH login source addresses were not extracted; logins are attributed to the analyst by
+  timing only.
+- The AppArmor denials at each login are unexplained.
+- Alerts from other agents, including the manager itself, were not reviewed.
+- Suricata sees only the sensor's own traffic (no port mirroring in UTM).
+- The default ET Open rules raised five port-specific alerts for a full 65,535-port scan and
+  no generic port-scan alert. No port-scan detection is claimed.
 
 ## Recommended follow-ups
 
 | # | Follow-up | Related risk |
 | --- | --- | --- |
-| 1 | Extract signature IDs, `flow_id`s and timestamps for Alerts 2 to 6 (read-only query of existing logs) and add them here | Evidence gap |
-| 2 | Review all alerts from 14:25 to 14:35 UTC, any source, to confirm nothing unrelated occurred | Evidence gap |
-| 3 | Add scan detection, for example a Wazuh frequency rule on rule 86601 from one source, then test it | network-security-lab R-10 |
-| 4 | Make the pre-test clock check stop a test automatically on every VM | network-security-lab R-04 |
-| 5 | Confirm the sensor's address before each test, or reserve it in DHCP | network-security-lab R-08 |
-| 6 | Decide a host firewall baseline for the sensor | network-security-lab R-11 |
-| 7 | Rotate `kibanaserver`; patch `wazuh-siem` | wazuh-siem-lab R-03, R-06 |
+| 1 | Prevent agent queue overflow: forward only the needed `eve.json` event types (for example alerts), or tune the agent queue, then re-check under load in a planned test | wazuh-siem-lab R-08 (new) |
+| 2 | Extract source addresses for the five SSH logins (read-only) | Evidence gap |
+| 3 | Find the cause of the AppArmor denials at each login (read-only) | Evidence gap |
+| 4 | Add scan detection, for example a Wazuh frequency rule on rule 86601 from one source, then test it | network-security-lab R-10 |
+| 5 | Make the pre-test clock check stop a test automatically on every VM | network-security-lab R-04 |
+| 6 | Confirm the sensor's address before each test, or reserve it in DHCP | network-security-lab R-08 |
+| 7 | Decide a host firewall baseline for the sensor; watch `eve.json` growth against free disk | network-security-lab R-11, R-07 |
+| 8 | Rotate `kibanaserver`; patch `wazuh-siem` | wazuh-siem-lab R-03, R-06 |
 
 These risks stay open; this investigation does not close any of them.
 
@@ -154,8 +178,9 @@ These risks stay open; this investigation does not close any of them.
 | Known-alert test | Use the public site `testmynids.org` | Approved an in-lab replacement after the site failed DNS from the sensor, the Mac and a separate network | Same signature (2100498), no Suricata config change |
 | Finding the alert in Wazuh | Search `alerts.json` for the bare number `2100498` | That search returned a sudo alert (rule 5402) whose alert ID contained the digits; I required a match on `signature_id` | Rerun matched rule 86601 with the same `flow_id` as `eve.json` |
 | Scan | One unprivileged nmap command for both targets | `wazuh-siem` produced no scan report; I approved `-Pn` for that host only | Checked that each target had its own report |
-| Scan timing | A command that printed the scanner clock but did not stop on it | The 3 h 10 min error was found afterwards; scanner times marked unusable; clock fixed before the second run | Timing in this report uses the Mac clock bracket only |
-| This report | Draft from the captured outputs | Required: no claims of generic scan detection, exact latency or network isolation; missing evidence marked; reachability described from `ubuntu-mgmt` | Every value above was copied from saved command output in the Lab 3 session; values not captured are marked |
+| Scan timing | A command that printed the scanner clock but did not stop on it | The 3 h 10 min error was found afterwards; scanner times not used | Timing uses the sensor and manager clocks, checked against the Mac |
+| First version of this report | Correlate the scan alerts by signature name and count | I required correlation on several fields, a full review of agent 002's alerts in the window, and rotated logs checked | Found a seventh alert (1a) and the agent queue overflow; all seven now matched on `flow_id`, SID, direction and timestamp |
+| This report | Draft from the captured outputs | Required: no claims of generic scan detection, exact latency or network isolation; missing evidence marked; "no compromise" limited to the records reviewed | Every value copied from saved command output; values not captured are marked |
 
 Limitations: single-operator lab, so review is not independent. Claude drafted this report;
 I reviewed it before commit.

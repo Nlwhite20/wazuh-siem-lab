@@ -18,7 +18,7 @@ The dashboard is reachable only through an SSH tunnel.
 One Linux endpoint, `soc-endpoint-01`, enrolled as an agent on 2026-09-28.
 It reconnected on 2026-10-06 and now also runs Suricata (see
 [network-security-lab](https://github.com/Nlwhite20/network-security-lab)).
-The first SOC investigation, of six Suricata alerts from authorized Lab 3
+The first SOC investigation, of seven Suricata alerts from authorized Lab 3
 testing, is in [Investigation 001](docs/investigation-001-lab3-ids-alerts.md).
 
 A reconciliation on 2026-10-06 found that the dashboard binding had drifted
