@@ -15,9 +15,11 @@ indexer, and every default password has been rotated except one deferred
 internal account (see [Security Decisions](docs/security-decisions.md)).
 The dashboard is reachable only through an SSH tunnel.
 
-One Linux endpoint, `soc-endpoint-01`, enrolled as an agent on 2026-09-28
-and has been Disconnected since that day. No alert has been generated or
-investigated yet.
+One Linux endpoint, `soc-endpoint-01`, enrolled as an agent on 2026-09-28.
+It reconnected on 2026-10-06 and now also runs Suricata (see
+[network-security-lab](https://github.com/Nlwhite20/network-security-lab)).
+The first SOC investigation, of six Suricata alerts from authorized Lab 3
+testing, is in [Investigation 001](docs/investigation-001-lab3-ids-alerts.md).
 
 A reconciliation on 2026-10-06 found that the dashboard binding had drifted
 from `127.0.0.1` to all interfaces through an unrecorded change. It was
@@ -75,12 +77,11 @@ production data are in scope.
   was deferred, and why
 - [Risk register](docs/risk-register.md): open, mitigated and accepted risks
 - [Finding 001](docs/finding-001-dashboard-bind-drift.md): dashboard binding drift, found and fixed
+- [Investigation 001](docs/investigation-001-lab3-ids-alerts.md): first alert triage (Suricata alerts from Lab 3 tests)
 
 ## Planned Next Steps
 
-- Reconnect `soc-endpoint-01` and confirm events arrive
 - Rotate the `kibanaserver` password and apply pending OS updates
+- Close the evidence gaps and follow-ups listed in Investigation 001
 - Connect a Windows endpoint with Sysmon
-- Generate safe test events, investigate the resulting alerts, and write an
-  incident report
 - Map lab evidence to security controls (started in Finding 001: CM-2, CM-3, CM-6, CA-7)

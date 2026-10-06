@@ -22,6 +22,6 @@
 | 2026-10-06 | Rebound dashboard to `127.0.0.1:443`; only the dashboard container recreated | Restore the documented baseline | `ss` shows `127.0.0.1:443`; HTTP 302 from inside the VM; no connection from the Mac directly | Complete ([Finding 001](finding-001-dashboard-bind-drift.md)) |
 | — | Rotate `kibanaserver` password | Close remaining default-credential gap | — | Pending |
 | — | Apply 8 pending OS updates | Patch currency | — | Pending |
-| — | Reconnect `soc-endpoint-01` | Restore endpoint telemetry | — | Pending |
+| 2026-10-06 | `soc-endpoint-01` reconnected after the SIEM restart | Restore endpoint telemetry | `agent_control`: Active; deliberate SSH test raised rule 5710 | Complete |
+| 2026-10-06 | First alert investigation (Lab 3 Suricata alerts) | SOC workflow evidence | [Investigation 001](investigation-001-lab3-ids-alerts.md) | Complete |
 | — | Connect a Windows endpoint with Sysmon | Second endpoint, richer telemetry | — | Pending |
-| — | Generate and investigate a test alert; write incident report | SOC workflow evidence | — | Pending |
