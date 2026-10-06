@@ -1,6 +1,8 @@
 # Network & Architecture
 
-> Status: **Deployed.** Reflects the running stack on the `wazuh-siem` VM.
+> Status: **Deployed.** Reflects the running stack on the `wazuh-siem` VM,
+> re-verified with `ss` on 2026-10-06 after correcting a binding drift
+> ([Finding 001](finding-001-dashboard-bind-drift.md)).
 > Uses placeholder addresses only; no real host or network details are
 > recorded in this repo.
 

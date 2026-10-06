@@ -1,6 +1,8 @@
 # Security Decisions
 
-> Status: reflects the deployment as of 2026-09-22.
+> Status: reflects the deployment as of 2026-10-06. Between 2026-09-28 and
+> 2026-10-06 the dashboard binding below was not in effect; see
+> [Finding 001](finding-001-dashboard-bind-drift.md).
 
 This lab makes a few deliberate trade-offs. Each is recorded here with its
 reasoning, so the choice is documented rather than silent, in line with
@@ -57,9 +59,14 @@ is scoped narrowly:
 ## Open items
 
 1. Rotate the `kibanaserver` password.
-2. No agents are connected yet, so `1514`/`1515` are open but currently
-   unused; this should be re-reviewed once endpoints are attached.
+2. One agent (`soc-endpoint-01`) has enrolled through `1514`/`1515`; it has
+   been Disconnected since 2026-09-28. Re-review the ports once endpoints
+   are reconnected.
 3. No firewall rule exists on the VM restricting which addresses can reach
    1514/1515 beyond UTM's own network isolation. Acceptable for a single-user
    home lab; would need tightening (or a Host Only network) in a
    multi-tenant setting.
+4. Nothing checks the running port bindings against this document
+   automatically. Run `ss -ltnH` after every change (see Finding 001).
+
+Full list with ratings: [Risk register](risk-register.md).

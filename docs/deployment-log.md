@@ -16,7 +16,12 @@
 | 2026-09-21 | Generated indexer TLS certificates | Required for manager/indexer/dashboard TLS | Certificate files present in `config/wazuh_indexer_ssl_certs/` | Complete |
 | 2026-09-21 | Started the Wazuh stack (manager, indexer, dashboard) | Bring the SIEM online | `docker ps` showed all three `Up`; `ss -ltn` showed loopback-only binding for 443/9200/55000 | Complete |
 | 2026-09-22 | Rotated `admin` and `wazuh-wui` default passwords | Remove publicly known default credentials before real use | See [Password Rotation Procedure](password-change-procedure.md) for full detail and verification | Complete |
+| 2026-09-28 | Enrolled `soc-endpoint-01` (Ubuntu ARM64, kernel 7.0) as Wazuh agent ID 002 | First endpoint telemetry | Recorded 2026-10-06 from the manager: `agent_control -i 002` shows agent v4.14.7, file-integrity scan 01:50 UTC, last keep-alive 02:18 UTC | Complete, agent Disconnected since |
+| 2026-09-28 | **Unrecorded change:** dashboard binding changed from `127.0.0.1:443` to all interfaces | Not recorded | Found 2026-10-06 by `ss` and a password-filtered `diff`; file modified 02:08 UTC | Drift (see Finding 001) |
+| 2026-10-06 | Reconciled repo with the running VM | Check documented controls against the live system | VM and Mac clocks agreed; read-only SSH checks of containers, ports, agents | Complete |
+| 2026-10-06 | Rebound dashboard to `127.0.0.1:443`; only the dashboard container recreated | Restore the documented baseline | `ss` shows `127.0.0.1:443`; HTTP 302 from inside the VM; no connection from the Mac directly | Complete ([Finding 001](finding-001-dashboard-bind-drift.md)) |
 | — | Rotate `kibanaserver` password | Close remaining default-credential gap | — | Pending |
-| — | Connect `ubuntu-mgmt` as a Wazuh agent | First endpoint telemetry | — | Pending |
+| — | Apply 8 pending OS updates | Patch currency | — | Pending |
+| — | Reconnect `soc-endpoint-01` | Restore endpoint telemetry | — | Pending |
 | — | Connect a Windows endpoint with Sysmon | Second endpoint, richer telemetry | — | Pending |
 | — | Generate and investigate a test alert; write incident report | SOC workflow evidence | — | Pending |
