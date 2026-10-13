@@ -47,7 +47,7 @@ documentation and observed results settle technical questions.
 
 - Ubuntu Server 24.04 LTS ARM64 virtual machine in UTM (Apple Virtualization)
 - Docker Compose
-- Wazuh manager, indexer and dashboard (v4.14.7), from Wazuh's official
+- Wazuh manager, indexer and dashboard (v4.14.8, upgraded from v4.14.7 on 2026-10-13), from Wazuh's official
   `wazuh-docker` repository, single-node layout
 
 ## Scope
